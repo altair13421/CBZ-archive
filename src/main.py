@@ -82,6 +82,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gimme a path, default is . (current folder)\nIf input is a folder, then it will convert all files inside it as a cbz,\nIf it is a file, it will extract it")
     parser.add_argument("path", nargs='+', help="Give a path, to cbz or folder, That's it")
     path = parser.parse_args().path
-    seperator = parser.parse_args().s
     converter = CBX_Converter()
     converter.start_up(path, seperator)
