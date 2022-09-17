@@ -1,4 +1,5 @@
 #!/bin/python3
+import json
 import os
 from pprint import pprint
 import shutil
@@ -33,6 +34,7 @@ class CBX_Converter():
                 os.makedirs(outputfolder, exist_ok=True)
                 with open(f"{os.path.join(outputfolder, filename)}", "wb") as img:
                     img.write(zip.read(temp_file))
+        self.manga_data(outputfolder)
         pass
     
     def convert_to_cbz(self, folderpath):
@@ -52,12 +54,13 @@ class CBX_Converter():
             folderpathi = folder.split(f"{os.sep}")
             print(folderpathi, folder)
             os.makedirs(folder, exist_ok=True)
-            for file in filestoadd[f"{folder}"]:
-                with ZipFile(f"{os.path.join(folderpath, *folderpathi)}.cbz", "w") as zipfile:
+            with ZipFile(f"{os.path.join(folderpath, *folderpathi)}.cbz", "w") as zipfile:
+                for file in filestoadd[f"{folder}"]:
                     print(f"Zipping,\t {file}")
                     zipfile.write(file, arcname=file.split(f"{os.sep}")[-1])
                     pass
             print(f"CBZ Created at {folder}")
+        self.manga_data(folderpath)
         self.cleanup(".")
 
     def cleanup(self, currentpath = '.'):
@@ -90,7 +93,12 @@ class CBX_Converter():
         os.chdir('..')
         pass
     
-    def start_up(self, path = ".", seperator = False):
+    def start_up(
+        self, 
+        path: str = ".", 
+        seperator: bool = False,
+        reconvert: bool = False
+    ):
         if not type(path) == list:
             path = [path]
         for pathitem in path:
@@ -98,15 +106,29 @@ class CBX_Converter():
                 self.extract_from_cbz(pathitem)
                 if seperator:
                     self.separator(pathitem.removesuffix(".cbz"))
+                if reconvert:
+                    self.separator(pathitem.removesuffix(".cbz"))
+                    self.convert_to_cbz(pathitem.removesuffix(".cbz"))
                 print(f"Extracted {pathitem}")
             elif os.path.isdir(pathitem):
                 self.convert_to_cbz(pathitem)
             else:
                 print("Nani is this? " + pathitem)
 
+    def manga_data(self, path: str = "."):
+        if "index.json" in os.listdir(path):
+            with open(f"{os.path.join(path ,'index.json')}") as jsonfile:
+                data = json.load(jsonfile)
+            needed_data = ["title", "author", "description", "cover", "status", "tags", "rating", "nsfw"]
+            for required in needed_data:
+                if required in list(data.keys()):
+                    print(required, ":", data[required])
+        pass
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gimme a path, default is . (current folder)\nIf input is a folder, then it will convert all files inside it as a cbz,\nIf it is a file, it will extract it")
     parser.add_argument("path", nargs='+', help="Give a path, to cbz or folder, That's it")
     parser.add_argument('-separate', action="store_true", help="Separate Chapters by Number")
+    parser.add_argument('-reconvert', action="store_true", help="Separate chapters by Number and Reconvert, no need for separator tag")
     converter = CBX_Converter()
-    converter.start_up(parser.parse_args().path, parser.parse_args().separate)
+    converter.start_up(parser.parse_args().path, parser.parse_args().separate, parser.parse_args().reconvert)
