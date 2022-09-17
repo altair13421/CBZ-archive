@@ -78,15 +78,11 @@ class CBX_Converter():
             if file.__contains__("index"):
                 continue
             filename, ext = file.split('.')
-            filer = None
+            chap_num = ""
             if filename.__contains__('-'):
-                filer = filename.split('-') 
+                chap_num = filename.split('-')[1]
             elif filename.__contains__('_'):
-                filer = filename.split('_')
-            if len(filer) == 2:
-                chap_num = filer[-1][0:3]
-            else:
-                chap_num = filer[1]
+                chap_num = filename.split('_')[-1][0:3]
             os.makedirs(f"{chap_num}", exist_ok=True)
             shutil.move(file, os.path.join(chap_num, file))
         print("successfully separated Chapters")
