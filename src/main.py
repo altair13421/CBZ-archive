@@ -117,12 +117,20 @@ class CBX_Converter():
 
     def manga_data(self, path: str = "."):
         if "index.json" in os.listdir(path):
+            print('\nManga Info:')
             with open(f"{os.path.join(path ,'index.json')}") as jsonfile:
                 data = json.load(jsonfile)
             needed_data = ["title", "author", "description", "cover", "status", "tags", "rating", "nsfw"]
             for required in needed_data:
                 if required in list(data.keys()):
-                    print(required, ":", data[required])
+                    if type(data[required]) == list:
+                        print(required, ":")
+                        for item in data[required]:
+                            if "title" in list(item.keys()):
+                                print(item["title"], end=" | ")
+                        print()
+                    else:
+                        print(required, ":", data[required])
         else: print("No Data found")
         pass
 
