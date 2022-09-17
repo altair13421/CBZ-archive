@@ -1,6 +1,7 @@
 #!/bin/python3
 import os
 from pprint import pprint
+import shutil
 import sys
 from zipfile import ZipFile
 import argparse
@@ -49,9 +50,10 @@ class CBX_Converter():
                     filestoadd[f"{pathdecons}"].append(os.path.join(root, file))
         for folder in list(filestoadd.keys()):
             folderpathi = folder.split(f"{os.sep}")
+            print(folderpathi, folder)
             os.makedirs(folder, exist_ok=True)
-            with ZipFile(f"{os.path.join(folderpath, *folderpathi)}.cbz", "w") as zipfile:
-                for file in filestoadd[f"{folder}"]:
+            for file in filestoadd[f"{folder}"]:
+                with ZipFile(f"{os.path.join(folderpath, *folderpathi)}.cbz", "w") as zipfile:
                     print(f"Zipping,\t {file}")
                     zipfile.write(file, arcname=file.split(f"{os.sep}")[-1])
                     pass
@@ -65,13 +67,37 @@ class CBX_Converter():
                     os.system(f'rmdir "{root}"')
                 else:
                     os.system(f'rm -rf "{root}"')
-
+    
+    def separator(self, path):
+        print("Chapter Separating")
+        os.chdir(f".{os.sep}{path}")
+        for file in os.listdir("."):
+            if file.__contains__("index"):
+                continue
+            filename, ext = file.split('.')
+            filer = None
+            if filename.__contains__('-'):
+                filer = filename.split('-') 
+            elif filename.__contains__('_'):
+                filer = filename.split('_')
+            if len(filer) == 2:
+                chap_num = filer[-1][0:3]
+            else:
+                chap_num = filer[1]
+            os.makedirs(f"{chap_num}", exist_ok=True)
+            shutil.move(file, os.path.join(chap_num, file))
+        print("successfully separated Chapters")
+        os.chdir('..')
+        pass
+    
     def start_up(self, path = ".", seperator = False):
         if not type(path) == list:
             path = [path]
         for pathitem in path:
             if pathitem.split('.')[-1] == 'cbz':
                 self.extract_from_cbz(pathitem)
+                if seperator:
+                    self.separator(pathitem.removesuffix(".cbz"))
                 print(f"Extracted {pathitem}")
             elif os.path.isdir(pathitem):
                 self.convert_to_cbz(pathitem)
@@ -81,6 +107,6 @@ class CBX_Converter():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gimme a path, default is . (current folder)\nIf input is a folder, then it will convert all files inside it as a cbz,\nIf it is a file, it will extract it")
     parser.add_argument("path", nargs='+', help="Give a path, to cbz or folder, That's it")
-    path = parser.parse_args().path
+    parser.add_argument('-separate', action="store_true", help="Separate Chapters by Number")
     converter = CBX_Converter()
-    converter.start_up(path, seperator)
+    converter.start_up(parser.parse_args().path, parser.parse_args().separate)
