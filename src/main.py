@@ -123,6 +123,7 @@ class CBX_Converter():
             for required in needed_data:
                 if required in list(data.keys()):
                     print(required, ":", data[required])
+        else: print("No Data found")
         pass
 
 if __name__ == "__main__":
