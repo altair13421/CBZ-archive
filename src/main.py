@@ -146,8 +146,8 @@ if __name__ == "__main__":
     parser.add_argument('-viewonly', action="store_true", help="View What's In the Archive")
     converter = CBX_Converter()
     converter.start_up(
-        parser.parse_args().path, 
-        parser.parse_args().separate, 
-        parser.parse_args().reconvert, 
-        parser.parse_args().viewonly
+        path = parser.parse_args().path, 
+        seperator = parser.parse_args().separate, 
+        reconvert = parser.parse_args().reconvert, 
+        view_only = parser.parse_args().viewonly
     )
