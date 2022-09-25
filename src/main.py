@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 import json
 import os
 from pprint import pprint
@@ -18,26 +18,32 @@ class CBX_Converter():
     def __init__(self):
         pass
     
-    def extract_from_cbz(self, filepath):
+    def extract_from_cbz(self, filepath:str, view_only: str = False):
         path_deconstruct = [
             x for x in filepath.split(os.sep) if x != ""
         ]
         the_file = path_deconstruct[-1]
         outputfolder = filepath.replace('.cbz', '')
-        os.makedirs(outputfolder, exist_ok=True)
+        if not view_only:
+            os.makedirs(outputfolder, exist_ok=True)
         print(f"Extracting {the_file}")
         with ZipFile(filepath, 'r') as zip:
             files_in_archives = zip.namelist()
-            for temp_file in files_in_archives:
-                filename = temp_file.split(os.sep)[-1]
-                print(f"\t\tExtracting {outputfolder}{os.sep}{filename}")
-                os.makedirs(outputfolder, exist_ok=True)
-                with open(f"{os.path.join(outputfolder, filename)}", "wb") as img:
-                    img.write(zip.read(temp_file))
-        self.manga_data(outputfolder)
-        pass
+            if view_only:
+                print('Files in Archive: ')
+                for item in files_in_archives:
+                    print(item)
+            else:
+                for temp_file in files_in_archives:
+                    filename = temp_file.split(os.sep)[-1]
+                    print(f"\t\tExtracting {outputfolder}{os.sep}{filename}")
+                    os.makedirs(outputfolder, exist_ok=True)
+                    with open(f"{os.path.join(outputfolder, filename)}", "wb") as img:
+                        img.write(zip.read(temp_file))
+        if not view_only:
+            self.manga_data(outputfolder)
     
-    def convert_to_cbz(self, folderpath):
+    def convert_to_cbz(self, folderpath:str):
         filestoadd = dict()
         for root, dirs, files in os.walk(folderpath):
             if len(root.split(os.sep)) > 2:
@@ -63,7 +69,7 @@ class CBX_Converter():
         self.manga_data(folderpath)
         self.cleanup(".")
 
-    def cleanup(self, currentpath = '.'):
+    def cleanup(self, currentpath:str = '.'):
         for root, dirs, files in os.walk(currentpath):
             if len(files) == 0 and os.path.getsize(root) == 0:
                 if os.name in ['nt', "NT", "Nt"]:
@@ -71,7 +77,7 @@ class CBX_Converter():
                 else:
                     os.system(f'rm -rf "{root}"')
     
-    def separator(self, path):
+    def separator(self, path:str):
         print("Chapter Separating")
         os.chdir(f".{os.sep}{path}")
         for file in os.listdir("."):
@@ -93,19 +99,21 @@ class CBX_Converter():
         self, 
         path: str = ".", 
         seperator: bool = False,
-        reconvert: bool = False
+        reconvert: bool = False,
+        view_only: bool = False,
     ):
         if not type(path) == list:
             path = [path]
         for pathitem in path:
             if pathitem.split('.')[-1] == 'cbz':
-                self.extract_from_cbz(pathitem)
+                self.extract_from_cbz(pathitem, view_only=view_only)
                 if seperator:
                     self.separator(pathitem.removesuffix(".cbz"))
                 if reconvert:
                     self.separator(pathitem.removesuffix(".cbz"))
                     self.convert_to_cbz(pathitem.removesuffix(".cbz"))
-                print(f"Extracted {pathitem}")
+                if not view_only:
+                    print(f"Extracted {pathitem}")
             elif os.path.isdir(pathitem):
                 self.convert_to_cbz(pathitem)
             else:
@@ -135,5 +143,11 @@ if __name__ == "__main__":
     parser.add_argument("path", nargs='+', help="Give a path, to cbz or folder, That's it")
     parser.add_argument('-separate', action="store_true", help="Separate Chapters by Number")
     parser.add_argument('-reconvert', action="store_true", help="Separate chapters by Number and Reconvert, no need for separator tag")
+    parser.add_argument('-viewonly', action="store_true", help="View What's In the Archive")
     converter = CBX_Converter()
-    converter.start_up(parser.parse_args().path, parser.parse_args().separate, parser.parse_args().reconvert)
+    converter.start_up(
+        parser.parse_args().path, 
+        parser.parse_args().separate, 
+        parser.parse_args().reconvert, 
+        parser.parse_args().viewonly
+    )
